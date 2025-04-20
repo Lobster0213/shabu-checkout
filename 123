@@ -1,0 +1,78 @@
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+export default function CheckoutApp() {
+  const [items, setItems] = useState([]);
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const [discount, setDiscount] = useState(0);
+  const [serviceFee, setServiceFee] = useState(true);
+  const [payment, setPayment] = useState("");
+
+  const addItem = () => {
+    if (!name || !price || quantity <= 0) return;
+    setItems([...items, { name, price: parseFloat(price), quantity }]);
+    setName("");
+    setPrice("");
+    setQuantity(1);
+  };
+
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const fee = serviceFee ? subtotal * 0.1 : 0;
+  const total = subtotal + fee - discount;
+  const change = payment ? parseFloat(payment) - total : 0;
+
+  return (
+    <div className="max-w-md mx-auto p-4 space-y-4">
+      <h1 className="text-2xl font-bold text-center text-orange-600">迎新涮涮鍋 結帳小幫手</h1>
+      <Card>
+        <CardContent className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <Input placeholder="品項名稱" value={name} onChange={e => setName(e.target.value)} />
+            <Input type="number" placeholder="單價" value={price} onChange={e => setPrice(e.target.value)} />
+            <Input type="number" placeholder="數量" value={quantity} onChange={e => setQuantity(parseInt(e.target.value))} />
+            <Button onClick={addItem}>新增</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent>
+          {items.map((item, i) => (
+            <div key={i} className="flex justify-between border-b py-1 text-sm">
+              <span>{item.name} x {item.quantity}</span>
+              <span>{item.price * item.quantity} 元</span>
+            </div>
+          ))}
+          <div className="mt-2 text-sm">
+            小計：{subtotal.toFixed(0)} 元<br />
+            服務費（10%）：{fee.toFixed(0)} 元<br />
+            <div className="flex items-center gap-2 mt-1">
+              <span>折扣：</span>
+              <Input className="w-24" type="number" value={discount} onChange={e => setDiscount(parseFloat(e.target.value) || 0)} />
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              <input type="checkbox" checked={serviceFee} onChange={() => setServiceFee(!serviceFee)} />
+              <span>加收服務費</span>
+            </div>
+            <div className="font-bold mt-2">總金額：{total.toFixed(0)} 元</div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span>顧客付款：</span>
+            <Input className="w-32" type="number" value={payment} onChange={e => setPayment(e.target.value)} />
+          </div>
+          <div className="text-lg font-bold text-green-700">找零：{change >= 0 ? change.toFixed(0) : 0} 元</div>
+          <Button variant="outline" onClick={() => { setItems([]); setDiscount(0); setPayment(""); }}>清除重來</Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
